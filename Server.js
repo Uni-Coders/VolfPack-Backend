@@ -11,12 +11,16 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-mongoose.connect("mongodb+srv://Uni-Coders:ixdvEHuAitq7V5ah@solarcast.ajupiq2.mongodb.net/", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("Connected to MongoDB"))
-.catch(err => console.error("MongoDB connection error:", err));
+mongoose
+  .connect(
+    "mongodb+srv://Uni-Coders:ixdvEHuAitq7V5ah@solarcast.ajupiq2.mongodb.net/",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Define User schema
 const userSchema = new mongoose.Schema({
@@ -47,7 +51,6 @@ app.post("/api/signup", async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      
     });
 
     // Save the user to the database
@@ -88,12 +91,11 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Define API endpoint for current weather
-const currentWeatherEndpoint =
-  "http://api.weatherapi.com/v1/current.json?key=d3c3d16842134b428fb192144241202&q=colombo";
-
-// Fetch current weather data
+// Fetch current weather data based on country and city
 app.get("/api/currentWeather", async (req, res) => {
   try {
+    const { country, city } = req.query;
+    const currentWeatherEndpoint = `http://api.weatherapi.com/v1/current.json?key=d3c3d16842134b428fb192144241202&q=${city},${country}`;
     const response = await axios.get(currentWeatherEndpoint);
     const currentWeatherData = response.data;
     const formattedData = {
@@ -113,12 +115,13 @@ app.get("/api/currentWeather", async (req, res) => {
 });
 
 // Define API endpoint for future weather
-const futureWeatherEndpoint =
-  "http://api.weatherapi.com/v1/forecast.json?key=d3c3d16842134b428fb192144241202&q=colombo";
-
-// Fetch future weather data for 5 days
 app.get("/api/futureWeather", async (req, res) => {
   try {
+    const { city, country } = req.query; // Extract city and country from query parameters
+
+    // Weather API endpoint with city and country parameters
+    const futureWeatherEndpoint = `http://api.weatherapi.com/v1/forecast.json?key=d3c3d16842134b428fb192144241202&q=${city},${country}`;
+
     const futureWeatherData = [];
     const currentDate = new Date();
     for (let i = 0; i < 6; i++) {
