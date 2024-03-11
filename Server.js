@@ -1,14 +1,14 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const express = require("express"); // Importing Express.js framework
+const axios = require("axios"); // Importing Axios for making HTTP requests
+const cors = require("cors"); // Importing CORS middleware for enabling Cross-Origin Resource Sharing
+const mongoose = require("mongoose"); // Importing Mongoose for MongoDB interactions
+const bcrypt = require("bcryptjs"); // Importing bcrypt for password hashing
+const jwt = require("jsonwebtoken"); // Importing JSON Web Token for user authentication
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-app.use(cors());
-app.use(express.json());
+const app = express(); // Creating an Express application
+const PORT = process.env.PORT || 3001; // Defining the port number
+app.use(cors()); // Using CORS middleware to enable Cross-Origin Resource Sharing
+app.use(express.json()); // Parsing incoming JSON requests
 
 // MongoDB connection
 mongoose
@@ -32,38 +32,17 @@ const userSchema = new mongoose.Schema({
 // Define User model
 const User = mongoose.model("User", userSchema);
 
-// Signup route
-app.post("/api/signup", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-    });
-
-    // Save the user to the database
-    await newUser.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).json({ error: "Failed to register user" });
-  }
-});
-
 // Login route
+/**
+ * Authenticate user login.
+ * @name POST/api/login
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.body.email - User's email address.
+ * @param {string} req.body.password - User's password.
+ * @returns {Object} Response object containing authentication token and username upon successful login.
+ */
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -90,8 +69,144 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+/// Define API endpoint for retrieving all users
+/**
+ * Retrieve all users.
+ * @name GET/api/users
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @returns {Object} Response object containing array of user details.
+ */
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json({ users });
+  } catch (error) {
+    console.error("Error retrieving users:", error);
+    res.status(500).json({ error: "Failed to retrieve users" });
+  }
+});
+
+// Define API endpoint for adding a new user
+/**
+ * Add new user.
+ * @name POST/api/user
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.body.username - Username of the new user.
+ * @param {string} req.body.email - Email of the new user.
+ * @param {string} req.body.password - Password of the new user.
+ * @returns {Object} Response object indicating success or failure of user addition.
+ */
+app.post("/api/user", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    // Save the user to the database
+    await newUser.save();
+
+    res.status(201).json({ message: "User added successfully" });
+  } catch (error) {
+    console.error("Error adding user:", error);
+    res.status(500).json({ error: "Failed to add user" });
+  }
+});
+
+// Define API endpoint for updating user details
+/**
+ * Update user details.
+ * @name PUT/api/user/:username
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.params.username - The username of the user to update details for.
+ * @param {string} req.body.email - New email address for the user.
+ * @returns {Object} Response object indicating success or failure of user details update.
+ */
+app.put("/api/update/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { email } = req.body;
+
+    // Find user by username and update email
+    const updatedUser = await User.findOneAndUpdate(
+      { username },
+      { email },
+      { new: true }
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "User details updated successfully" });
+  } catch (error) {
+    console.error("Error updating user details:", error);
+    res.status(500).json({ error: "Failed to update user details" });
+  }
+});
+
+// Define API endpoint for deleting a user
+/**
+ * Delete user.
+ * @name DELETE/api/user/:username
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.params.username - The username of the user to delete.
+ * @returns {Object} Response object indicating success or failure of user deletion.
+ */
+app.delete("/api/delete/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find user by username and delete
+    const deletedUser = await User.findOneAndDelete({ username });
+
+    // Check if user exists
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
+
 // Define API endpoint for current weather
 // Fetch current weather data based on country and city
+/**
+ * Retrieve current weather information.
+ * @name GET/api/currentWeather
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.query.country - Country name.
+ * @param {string} req.query.city - City name.
+ * @returns {Object} Response object containing current weather data.
+ */
 app.get("/api/currentWeather", async (req, res) => {
   try {
     const { country, city } = req.query;
@@ -115,6 +230,16 @@ app.get("/api/currentWeather", async (req, res) => {
 });
 
 // Define API endpoint for future weather
+/**
+ * Retrieve future weather forecast.
+ * @name GET/api/futureWeather
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.query.country - Country name.
+ * @param {string} req.query.city - City name.
+ * @returns {Object} Response object containing future weather forecast.
+ */
 app.get("/api/futureWeather", async (req, res) => {
   try {
     const { city, country } = req.query; // Extract city and country from query parameters
@@ -149,6 +274,34 @@ app.get("/api/futureWeather", async (req, res) => {
   } catch (error) {
     console.error("Error fetching future weather data:", error);
     res.status(500).json({ error: "Failed to fetch future weather data" });
+  }
+});
+
+// Define API endpoint for retrieving user details
+/**
+ * Retrieve user details based on username.
+ * @name GET/api/user/:username
+ * @function
+ * @memberof module:Server
+ * @inner
+ * @param {string} req.params.username - The username of the user to retrieve details for.
+ * @returns {Object} Response object containing user details.
+ */
+app.get("/api/user/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Send user details in the response
+    res.json({ username: user.username, email: user.email });
+  } catch (error) {
+    console.error("Error retrieving user details:", error);
+    res.status(500).json({ error: "Failed to retrieve user details" });
   }
 });
 
