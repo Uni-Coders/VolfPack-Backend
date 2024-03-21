@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String,
+  functions: {
+    type: [String],
+    default: [], // Default value as an empty array
+  },
 });
 
 // Define User model
@@ -43,6 +47,7 @@ const User = mongoose.model("User", userSchema);
  * @param {string} req.body.password - User's password.
  * @returns {Object} Response object containing authentication token and username upon successful login.
  */
+// Login route
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,17 +64,24 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, "your_secret_key");
+    // Log the functions array
+    console.log(user.functions);
 
-    res.json({ token, username: user.username });
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      "group11-uniCoders@SLIITCITYUNI"
+    );
+
+    // Send response with token, username, and functions array
+    res.json({ token, username: user.username, functions: user.functions });
   } catch (error) {
     console.error("Error logging in:", error);
     res.status(500).json({ error: "Failed to login" });
   }
 });
 
-/// Define API endpoint for retrieving all users
+// Define API endpoint for retrieving all users
 /**
  * Retrieve all users.
  * @name GET/api/users
@@ -98,11 +110,12 @@ app.get("/api/users", async (req, res) => {
  * @param {string} req.body.username - Username of the new user.
  * @param {string} req.body.email - Email of the new user.
  * @param {string} req.body.password - Password of the new user.
+ * @param {array} req.body.functions - Array of functions selected for the new user (e.g., ['table', 'graph']).
  * @returns {Object} Response object indicating success or failure of user addition.
  */
 app.post("/api/user", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, functions } = req.body;
 
     // Check if the user already exists
     const existingUser = await User.findOne({ email });
@@ -118,6 +131,7 @@ app.post("/api/user", async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      functions,
     });
 
     // Save the user to the database
@@ -130,26 +144,37 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-// Define API endpoint for updating user details
+// Define API endpoint for updating user details including selected functions and password
 /**
- * Update user details.
+ * Update user details and password.
  * @name PUT/api/user/:username
  * @function
  * @memberof module:Server
  * @inner
  * @param {string} req.params.username - The username of the user to update details for.
  * @param {string} req.body.email - New email address for the user.
+ * @param {array} req.body.functions - Updated array of functions selected for the user (e.g., ['table', 'graph']).
+ * @param {string} req.body.password - New password for the user.
  * @returns {Object} Response object indicating success or failure of user details update.
  */
 app.put("/api/update/:username", async (req, res) => {
   try {
     const { username } = req.params;
-    const { email } = req.body;
+    const { email, functions } = req.body;
 
-    // Find user by username and update email
+    // Construct update object based on provided fields
+    const updateFields = {};
+    if (email) {
+      updateFields.email = email;
+    }
+    if (functions) {
+      updateFields.functions = functions;
+    }
+
+    // Update user details
     const updatedUser = await User.findOneAndUpdate(
       { username },
-      { email },
+      updateFields,
       { new: true }
     );
 
@@ -193,7 +218,6 @@ app.delete("/api/delete/:username", async (req, res) => {
     res.status(500).json({ error: "Failed to delete user" });
   }
 });
-
 
 // Define API endpoint for current weather
 // Fetch current weather data based on country and city
