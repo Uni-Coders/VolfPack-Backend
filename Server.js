@@ -160,13 +160,7 @@ app.post("/api/user", async (req, res) => {
 app.put("/api/update/:username", async (req, res) => {
   try {
     const { username } = req.params;
-    const { email, functions, password } = req.body;
-
-    // Hash the new password if provided
-    let hashedPassword = null;
-    if (password) {
-      hashedPassword = await bcrypt.hash(password, 10);
-    }
+    const { email, functions } = req.body;
 
     // Construct update object based on provided fields
     const updateFields = {};
@@ -175,9 +169,6 @@ app.put("/api/update/:username", async (req, res) => {
     }
     if (functions) {
       updateFields.functions = functions;
-    }
-    if (hashedPassword) {
-      updateFields.password = hashedPassword;
     }
 
     // Update user details
