@@ -14,7 +14,7 @@ app.use(express.json()); // Parsing incoming JSON requests
 // MongoDB connection
 mongoose
   .connect(
-    "mongodb+srv://Uni-Coders:ixdvEHuAitq7V5ah@solarcast.ajupiq2.mongodb.net/",
+    "mongodb+srv://Uni-Coders:<password>@solarcast.ajupiq2.mongodb.net/",
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
