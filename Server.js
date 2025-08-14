@@ -235,7 +235,7 @@ app.delete("/api/delete/:username", async (req, res) => {
 app.get("/api/currentWeather", async (req, res) => {
   try {
     const { country, city } = req.query;
-    const currentWeatherEndpoint = `http://api.weatherapi.com/v1/current.json?key=d3c3d16842134b428fb192144241202&q=${city},${country}`;
+    const currentWeatherEndpoint = `http://api.weatherapi.com/v1/current.json?key=<key>&q=${city},${country}`;
     const response = await axios.get(currentWeatherEndpoint);
     const currentWeatherData = response.data;
     const formattedData = {
@@ -270,7 +270,7 @@ app.get("/api/futureWeather", async (req, res) => {
     const { city, country } = req.query; // Extract city and country from query parameters
 
     // Weather API endpoint with city and country parameters
-    const futureWeatherEndpoint = `http://api.weatherapi.com/v1/forecast.json?key=d3c3d16842134b428fb192144241202&q=${city},${country}`;
+    const futureWeatherEndpoint = `http://api.weatherapi.com/v1/forecast.json?key=<key>&q=${city},${country}`;
 
     const futureWeatherData = [];
     const currentDate = new Date();
